@@ -58,7 +58,7 @@ app.get("/", (req, res) => {
   res.send("The server is working");
 });
 
-module.exports.handler = serverless(app);
+module.exports = app;
 
 if (process.env.PORT && process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;
