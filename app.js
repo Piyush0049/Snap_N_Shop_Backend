@@ -11,6 +11,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const app = express();
 const path = require("path");
+const serverless = require("serverless-http");
 
 app.use(cors({
     origin : ["https://main--dulcet-conkies-e3a8f0.netlify.app", "http://localhost:3000", "https://main--ecommercefrontend123654.netlify.app"],
@@ -35,4 +36,4 @@ app.get("/", (req,res)=>{
     res.send("The server is working")
 })
 
-module.exports = app; 
+module.exports.handler = serverless(app)
