@@ -31,6 +31,7 @@ const app = express();
 app.use(
   cors({
     origin: [
+      "https://ecommerce-frontend-web-ten.vercel.app",
       "https://main--dulcet-conkies-e3a8f0.netlify.app",
       "http://localhost:3000",
       "https://main--ecommercefrontend123654.netlify.app",
