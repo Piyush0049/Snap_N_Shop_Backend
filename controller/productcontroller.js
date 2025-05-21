@@ -37,7 +37,7 @@ exports.getallproducts = async (req, res) => {
 
         res.status(200).json({ success: true, productcount, products, resultperpage, allproducts });
     } catch (error) {
-        console.error(error); // Log the error for debugging
+        console.error(error);
         res.status(500).json({ success: false, error: "Failed to access the products" });
     }
 };
