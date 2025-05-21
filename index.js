@@ -18,20 +18,16 @@ const fileUpload = require("express-fileupload");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
-// 1️⃣ Connect to database
 connectDB();
 
-// 2️⃣ Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// 3️⃣ Create Express app
 const app = express();
 
-// 4️⃣ Middleware
 app.use(
   cors({
     origin: [
