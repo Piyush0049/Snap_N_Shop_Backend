@@ -30,7 +30,7 @@ exports.createuser = async (req, res, next) => {
       httpOnly: true, // Ensure cookie is accessible only via HTTP(S)
       sameSite: "None", // Allow cross-site access
       secure: true, // Ensure cookie is sent only over HTTPS
-      domain: "snap-n-shop-fullmernstack-ecommerce.onrender.com", // Set the domain attribute
+      domain: "https://ecommerce-backend-ochre-two.vercel.app", // Set the domain attribute
     });
     return res.status(200).json({ success: true, user: newUser, authtoken });
   } catch (error) {
@@ -63,7 +63,7 @@ exports.userlogin = async (req, res, next) => {
       httpOnly: true, // Ensure cookie is accessible only via HTTP(S)
       sameSite: "None", // Allow cross-site access
       secure: true, // Ensure cookie is sent only over HTTPS
-      domain: "snap-n-shop-fullmernstack-ecommerce.onrender.com", // Set the domain attribute
+      domain: "https://ecommerce-backend-ochre-two.vercel.app", // Set the domain attribute
     });
     return res
       .status(200)
@@ -99,7 +99,7 @@ exports.userlogout = async (req, res, next) => {
       httpOnly: true,
       sameSite: "None",
       secure: true,
-      domain: "snap-n-shop-fullmernstack-ecommerce.onrender.com",
+      domain: "https://ecommerce-backend-ochre-two.vercel.app",
     });
 
     return res
@@ -133,7 +133,7 @@ exports.userdelete = async (req, res, next) => {
       httpOnly: true,
       sameSite: "None",
       secure: true,
-      domain: "snap-n-shop-fullmernstack-ecommerce.onrender.com",
+      domain: "https://ecommerce-backend-ochre-two.vercel.app",
     });
     return res
       .status(200)
@@ -219,7 +219,7 @@ exports.resetpassword = async (req, res, next) => {
       httpOnly: true,
       sameSite: "None",
       secure: true,
-      domain: "snap-n-shop-fullmernstack-ecommerce.onrender.com",
+      domain: "https://ecommerce-backend-ochre-two.vercel.app",
     });
     return res
       .status(200)
@@ -281,7 +281,7 @@ exports.updatepassword = async (req, res, next) => {
       httpOnly: true,
       sameSite: "None",
       secure: true,
-      domain: "snap-n-shop-fullmernstack-ecommerce.onrender.com",
+      domain: "https://ecommerce-backend-ochre-two.vercel.app",
     });
     return res
       .status(200)
