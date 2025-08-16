@@ -5,6 +5,7 @@ const connecttodatabase = async () => {
     await mongoose.connect(process.env.DB_URI, {
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 10s
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      
     });
 
     console.log(`Database connected: ${mongoose.connection.host}`);

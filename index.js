@@ -31,6 +31,7 @@ const app = express();
 app.use(
   cors({
     origin: [
+      "http://localhost:5173",      
       "https://ecommerce-frontend-web-ten.vercel.app",
       "https://main--dulcet-conkies-e3a8f0.netlify.app",
       "http://localhost:3000",
@@ -46,10 +47,10 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
 
-app.use("/api/v1", orderRoutes);
-app.use("/api/v1", productRoutes);
+app.use("/api/v1/ord", orderRoutes);
+app.use("/api/v1/prod", productRoutes);
 app.use("/auth", userRoutes);
-app.use("/api/v1", paymentRoutes);
+app.use("/api/v1/pay", paymentRoutes);
 
 app.get("/", (req, res) => {
   res.send("The server is working");

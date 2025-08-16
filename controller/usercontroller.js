@@ -26,7 +26,7 @@ exports.createuser = async (req, res, next) => {
     });
     const authtoken = jwt.sign({ _id: newUser._id }, SEC_KEY);
     res.cookie("token", authtoken, {
-      maxAge: 900000, // Expiry time
+      maxAge: 3600000, // Expiry time
       httpOnly: true, // Ensure cookie is accessible only via HTTP(S)
       sameSite: "None", // Allow cross-site access
       secure: true, // Ensure cookie is sent only over HTTPS
@@ -59,7 +59,7 @@ exports.userlogin = async (req, res, next) => {
     }
     const authtoken = jwt.sign({ _id: user._id }, SEC_KEY);
     res.cookie("token", authtoken, {
-      maxAge: 900000, // Expiry time
+      maxAge: 3600000, // Expiry time
       httpOnly: true, // Ensure cookie is accessible only via HTTP(S)
       sameSite: "None", // Allow cross-site access
       secure: true, // Ensure cookie is sent only over HTTPS
@@ -215,7 +215,7 @@ exports.resetpassword = async (req, res, next) => {
     const authtoken = jwt.sign({ _id: user._id }, SEC_KEY);
     const { password } = user;
     res.cookie("token", authtoken, {
-      maxAge: 900000,
+      maxAge: 3600000,
       httpOnly: true,
       sameSite: "None",
       secure: true,
@@ -277,7 +277,7 @@ exports.updatepassword = async (req, res, next) => {
     );
     const authtoken = jwt.sign({ _id: user._id }, SEC_KEY);
     res.cookie("token", authtoken, {
-      maxAge: 900000,
+      maxAge: 3600000,
       httpOnly: true,
       sameSite: "None",
       secure: true,
