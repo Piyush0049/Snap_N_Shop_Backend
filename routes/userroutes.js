@@ -1,6 +1,6 @@
 const express = require("express");
 const authorizeroles = require("../middleware/authwork")
-const { createuser, userlogin, userlogout, userdelete, forgotpassword, resetpassword, getuserprofile, updatepassword, updateprofile, getallusers,changeTheWorkbByAdmin } = require("../controller/usercontroller");
+const { createuser, userlogin, userlogout, userdelete, forgotpassword, resetpassword, getuserprofile, updatepassword, updateprofile, getallusers,changeTheWorkbByAdmin, googlelogin } = require("../controller/usercontroller");
 const router = express.Router();
 router.route("/createuser").post(createuser)
 router.route("/login").post(userlogin)
@@ -13,4 +13,5 @@ router.route("/updatepassword").put(updatepassword)
 router.route("/updateprofile").put(updateprofile)
 router.route("/getalluserprofile").get(authorizeroles, getallusers)
 router.route("/changerole").put(authorizeroles, changeTheWorkbByAdmin)
+router.post("/google", googlelogin);
 module.exports = router;

@@ -5,6 +5,9 @@ const jwt = require("jsonwebtoken");
 const SEC_KEY = "This is ecommerce";
 const crypto = require("crypto");
 const sendmail = require("../middleware/sendmail");
+const { OAuth2Client } = require("google-auth-library");
+
+
 exports.createuser = async (req, res, next) => {
   try {
     var { username, email, password, avatar, work } = req.body;
@@ -84,6 +87,63 @@ exports.userlogin = async (req, res, next) => {
       });
   }
 };
+
+
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+
+exports.googlelogin = async (req, res, next) => {
+  try {
+    const token = req.body.token || req.body.googleUser;
+    console.log("Google login credential:", token);
+
+    if (!token) {
+      return res.status(400).json({ success: false, message: "No token" });
+    }
+
+    // verify google token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, sub } = payload;
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = await User.create({
+        username: name,
+        email,
+        password: await bcrypt.hash(sub, 10), // random hash, never used directly
+      });
+    }
+    
+    const tokenJWT = jwt.sign({ _id: user._id }, SEC_KEY);
+
+    // 🔹 Set cookie like you do in userlogin
+    res.cookie("token", tokenJWT, {
+      maxAge: 3600000, // 1h
+      httpOnly: true,
+      sameSite: "None", // allow frontend cross-site cookie
+      secure: true,     // only HTTPS
+      // domain: "your-frontend-domain.com" // set if frontend != backend
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Google login successful",
+      token: tokenJWT,
+      user
+    });
+  } catch (error) {
+    console.error("Google login error:", error);
+    res.status(500).json({ success: false, message: "Google login failed" });
+  }
+};
+
+
 
 exports.userlogout = async (req, res, next) => {
   try {
@@ -233,6 +293,11 @@ exports.resetpassword = async (req, res, next) => {
 exports.getuserprofile = async (req, res, next) => {
   try {
     const { token } = req.cookies;
+    if (!token) {
+      return res
+        .status(200)
+        .json({ success: false, message: "Token not found, please login first" });
+    }
     const decoded = jwt.verify(token, SEC_KEY);
     const user = await User.findById(decoded._id);
     res
@@ -369,3 +434,4 @@ exports.changeTheWorkbByAdmin = async (req, res, next) => {
       .json({ success: false, message: "Internal server error" });
   }
 };
+
