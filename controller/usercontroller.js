@@ -153,7 +153,6 @@ exports.userlogout = async (req, res, next) => {
         .status(400)
         .json({ success: false, message: "Login with an account first" });
     }
-    // Expire the token by setting its expiration time to a past date
     res.cookie("token", "", {
       expires: new Date(0),
       httpOnly: true,
