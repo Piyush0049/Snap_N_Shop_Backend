@@ -192,7 +192,6 @@ exports.userdelete = async (req, res, next) => {
       httpOnly: true,
       sameSite: "None",
       secure: true,
-      // domain: "https://ecommerce-backend-ochre-two.vercel.app",
     });
     return res
       .status(200)
