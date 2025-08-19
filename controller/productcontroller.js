@@ -22,7 +22,7 @@ exports.createproduct = async (req, res, next) => {
 
 exports.getallproducts = async (req, res) => {
     try {
-        const resultperpage = 2;
+        const resultperpage = 4;
 
         // Initially count all documents
         let productcount = await Product.countDocuments();
