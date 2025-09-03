@@ -1,4 +1,3 @@
-// index.js
 require("dotenv").config({
   path:
     process.env.NODE_ENV === "production"
@@ -7,7 +6,6 @@ require("dotenv").config({
 });
 
 const express = require("express");
-const serverless = require("serverless-http");
 const cloudinary = require("cloudinary").v2;
 const connectDB = require("./config/database");
 const productRoutes = require("./routes/productroute");
@@ -28,23 +26,36 @@ cloudinary.config({
 
 const app = express();
 
+// ✅ Dynamic CORS
+const allowedOrigins = [
+  "https://ecommerce-frontend-web-ten.vercel.app",
+  "http://localhost:3000",
+];
+
 const corsOptions = {
-  origin: ["https://ecommerce-frontend-web-ten.vercel.app", "http://localhost:3000"],
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-requested-with"],
   credentials: true,
-  optionsSuccessStatus: 204,
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-
+// Middlewares
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
 
+// Routes
 app.use("/api/v1/ord", orderRoutes);
 app.use("/api/v1/prod", productRoutes);
 app.use("/auth", userRoutes);
@@ -56,9 +67,8 @@ app.get("/", (req, res) => {
 
 module.exports = app;
 
-// if (process.env.PORT && process.env.NODE_ENV !== "production") {
+// Local dev only
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`App listening on http://localhost:${PORT}`);
   });
-// }
