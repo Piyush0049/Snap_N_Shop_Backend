@@ -363,7 +363,6 @@ exports.updatepassword = async (req, res, next) => {
       sameSite: isProduction ? "None" : "Lax",
       path: "/",                     // MUST match
       domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined
-      // domain: "https://ecommerce-backend-ochre-two.vercel.app",
     });
     return res
       .status(200)
