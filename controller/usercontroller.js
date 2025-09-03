@@ -32,6 +32,7 @@ exports.createuser = async (req, res, next) => {
       maxAge: 3600000, // Expiry time
       httpOnly: true, // Ensure cookie is accessible only via HTTP(S)
       sameSite: "None", // Allow cross-site access
+      path: "/",      
       secure: true, // Ensure cookie is sent only over HTTPS
       // domain: "https://ecommerce-backend-ochre-two.vercel.app", // Set the domain attribute
     });
@@ -63,6 +64,7 @@ exports.userlogin = async (req, res, next) => {
     const authtoken = jwt.sign({ _id: user._id }, SEC_KEY);
     res.cookie("token", authtoken, {
       maxAge: 3600000, // Expiry time
+      path: "/",      
       httpOnly: true, // Ensure cookie is accessible only via HTTP(S)
       sameSite: "None", // Allow cross-site access
       secure: true, // Ensure cookie is sent only over HTTPS
@@ -126,6 +128,7 @@ exports.googlelogin = async (req, res, next) => {
     res.cookie("token", tokenJWT, {
       maxAge: 3600000, // 1h
       httpOnly: true,
+      path: "/",      
       sameSite: "None", // allow frontend cross-site cookie
       secure: true,     // only HTTPS
       // domain: "your-frontend-domain.com" // set if frontend != backend
@@ -158,6 +161,7 @@ exports.userlogout = async (req, res, next) => {
       httpOnly: true,
       sameSite: "None",
       secure: true,
+      path: "/"
       // domain: "https://ecommerce-backend-ochre-two.vercel.app",
     });
 
@@ -171,6 +175,9 @@ exports.userlogout = async (req, res, next) => {
       .json({ success: false, message: "Internal server error" });
   }
 };
+
+
+
 exports.userdelete = async (req, res, next) => {
   try {
     const { token } = req.cookies;
@@ -189,6 +196,7 @@ exports.userdelete = async (req, res, next) => {
     await User.findByIdAndDelete(decoded._id);
     res.cookie("token", "", {
       expires: new Date(0),
+      path: "/",      
       httpOnly: true,
       sameSite: "None",
       secure: true,
@@ -274,6 +282,7 @@ exports.resetpassword = async (req, res, next) => {
     const { password } = user;
     res.cookie("token", authtoken, {
       maxAge: 3600000,
+      path: "/",      
       httpOnly: true,
       sameSite: "None",
       secure: true,
@@ -342,6 +351,7 @@ exports.updatepassword = async (req, res, next) => {
     res.cookie("token", authtoken, {
       maxAge: 3600000,
       httpOnly: true,
+      path: "/",      
       sameSite: "None",
       secure: true,
       // domain: "https://ecommerce-backend-ochre-two.vercel.app",
