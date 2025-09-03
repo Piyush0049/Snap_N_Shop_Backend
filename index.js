@@ -28,46 +28,23 @@ cloudinary.config({
 
 const app = express();
 
-// ✅ Allowed frontend origins
-const allowedOrigins = [
-  "https://ecommerce-frontend-web-ten.vercel.app",
-  "http://localhost:3000"
-];
-
 const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true); // ✅ Allow request
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: ["https://ecommerce-frontend-web-ten.vercel.app", "http://localhost:3000"],
   methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
-  allowedHeaders: ["Content-Type", "Authorization", "x-requested-with"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
+  optionsSuccessStatus: 204,
 };
 
-// ✅ Apply CORS before routes
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-// Extra fallback (for Vercel edge cases)
-app.use((req, res, next) => {
-  if (allowedOrigins.includes(req.headers.origin)) {
-    res.header("Access-Control-Allow-Origin", req.headers.origin);
-  }
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
-  next();
-});
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
 
-// ✅ Routes
 app.use("/api/v1/ord", orderRoutes);
 app.use("/api/v1/prod", productRoutes);
 app.use("/auth", userRoutes);

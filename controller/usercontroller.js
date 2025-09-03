@@ -1,34 +1,25 @@
 const User = require("../models/usermodel");
 const bcrypt = require("bcrypt");
+const Cookies = require("js-cookie");
 const jwt = require("jsonwebtoken");
+const SEC_KEY = "This is ecommerce";
 const crypto = require("crypto");
 const sendmail = require("../middleware/sendmail");
 const { OAuth2Client } = require("google-auth-library");
 
-const SEC_KEY = "This is ecommerce";
-const isProduction = process.env.NODE_ENV === "production";
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// ✅ Common cookie options
-const cookieOptions = {
-  httpOnly: true,
-  secure: true, // Required on Vercel (HTTPS)
-  sameSite: isProduction ? "None" : "Lax",
-  path: "/",
-  // domain: isProduction ? ".ecommerce-backend-ochre-two.vercel.app" : undefined, // allow across subdomains
-};
-
-// ===================== SIGNUP =====================
-exports.createuser = async (req, res) => {
+exports.createuser = async (req, res, next) => {
   try {
-    let { username, email, password, avatar, work } = req.body;
-
+    var { username, email, password, avatar, work } = req.body;
     const existingEmail = await User.findOne({ email });
     if (existingEmail) {
-      return res.status(400).json({ success: false, message: "User already exists" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User already exists" });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    password = hashedPassword;
     const newUser = await User.create({
       username,
       email,
@@ -36,14 +27,14 @@ exports.createuser = async (req, res) => {
       work,
       password: hashedPassword,
     });
-
     const authtoken = jwt.sign({ _id: newUser._id }, SEC_KEY);
-
     res.cookie("token", authtoken, {
-      ...cookieOptions,
-      maxAge: 3600000,
+      maxAge: 3600000, // Expiry time
+      httpOnly: true, // Ensure cookie is accessible only via HTTP(S)
+      sameSite: "None", // Allow cross-site access
+      secure: true, // Ensure cookie is sent only over HTTPS
+      // domain: "https://ecommerce-backend-ochre-two.vercel.app", // Set the domain attribute
     });
-
     return res.status(200).json({ success: true, user: newUser, authtoken });
   } catch (error) {
     console.log(error);
@@ -51,49 +42,67 @@ exports.createuser = async (req, res) => {
   }
 };
 
-// ===================== LOGIN =====================
-exports.userlogin = async (req, res) => {
+exports.userlogin = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email }).select("+password");
-
     if (!user) {
-      return res.status(400).json({ success: false, message: "User does not exist, sign up first" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "User does not exist, sign up first",
+        });
     }
-
     const comp = await bcrypt.compare(password, user.password);
     if (!comp) {
-      return res.status(400).json({ success: false, message: "Incorrect password" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Incorrect password" });
     }
-
     const authtoken = jwt.sign({ _id: user._id }, SEC_KEY);
-
     res.cookie("token", authtoken, {
-      ...cookieOptions,
-      maxAge: 3600000,
+      maxAge: 3600000, // Expiry time
+      httpOnly: true, // Ensure cookie is accessible only via HTTP(S)
+      sameSite: "None", // Allow cross-site access
+      secure: true, // Ensure cookie is sent only over HTTPS
+      // domain: "https://ecommerce-backend-ochre-two.vercel.app", // Set the domain attribute
     });
-
-    return res.status(200).json({
-      success: true,
-      message: "Successfully logged in",
-      user,
-      authtoken,
-    });
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Successfully logged in",
+        user,
+        authtoken,
+      });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Internal server error",
+        authenticated: true,
+      });
   }
 };
 
-// ===================== GOOGLE LOGIN =====================
-exports.googlelogin = async (req, res) => {
+
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+
+exports.googlelogin = async (req, res, next) => {
   try {
     const token = req.body.token || req.body.googleUser;
+    console.log("Google login credential:", token);
 
     if (!token) {
       return res.status(400).json({ success: false, message: "No token" });
     }
 
+    // verify google token
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -107,22 +116,26 @@ exports.googlelogin = async (req, res) => {
       user = await User.create({
         username: name,
         email,
-        password: await bcrypt.hash(sub, 10), // random hash, never used
+        password: await bcrypt.hash(sub, 10), // random hash, never used directly
       });
     }
-
+    
     const tokenJWT = jwt.sign({ _id: user._id }, SEC_KEY);
 
+    // 🔹 Set cookie like you do in userlogin
     res.cookie("token", tokenJWT, {
-      ...cookieOptions,
-      maxAge: 3600000,
+      maxAge: 3600000, // 1h
+      httpOnly: true,
+      sameSite: "None", // allow frontend cross-site cookie
+      secure: true,     // only HTTPS
+      // domain: "your-frontend-domain.com" // set if frontend != backend
     });
 
     res.status(200).json({
       success: true,
       message: "Google login successful",
       token: tokenJWT,
-      user,
+      user
     });
   } catch (error) {
     console.error("Google login error:", error);
@@ -130,64 +143,65 @@ exports.googlelogin = async (req, res) => {
   }
 };
 
-// ===================== LOGOUT =====================
-exports.userlogout = async (req, res) => {
-  try {
-    res.clearCookie("token", {
-      ...cookieOptions,
-    });
 
-    return res.status(200).json({ success: true, message: "Logout successful" });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ success: false, message: "Internal server error" });
-  }
-};
 
-// ===================== DELETE USER =====================
-exports.userdelete = async (req, res) => {
+exports.userlogout = async (req, res, next) => {
   try {
     const { token } = req.cookies;
-    if (!token) {
-      return res.status(400).json({ success: false, message: "Login first" });
+    if (token == null) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Login with an account first" });
     }
+    res.cookie("token", "", {
+      expires: new Date(0),
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+      // domain: "https://ecommerce-backend-ochre-two.vercel.app",
+    });
 
+    return res
+      .status(200)
+      .json({ success: true, message: "Logout successful" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+exports.userdelete = async (req, res, next) => {
+  try {
+    const { token } = req.cookies;
+    if (token == null) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Login with an account first" });
+    }
     const decoded = jwt.verify(token, SEC_KEY);
     const user = await User.findById(decoded._id);
     if (!user) {
-      return res.status(400).json({ success: false, message: "User does not exist" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User does not exist" });
     }
-
     await User.findByIdAndDelete(decoded._id);
-
-    res.clearCookie("token", {
-      ...cookieOptions,
+    res.cookie("token", "", {
+      expires: new Date(0),
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
     });
-
-    return res.status(200).json({ success: true, message: "User deleted successfully" });
+    return res
+      .status(200)
+      .json({ success: true, message: "User id deleted successfully" });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
-
-// ===================== PROFILE =====================
-exports.getuserprofile = async (req, res) => {
-  try {
-    const { token } = req.cookies;
-    if (!token) {
-      return res.status(200).json({ success: false, message: "Token not found, login first" });
-    }
-
-    const decoded = jwt.verify(token, SEC_KEY);
-    const user = await User.findById(decoded._id);
-
-    res.status(200).json({ success: true, message: "Here are the user details", user });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
-};
-
 
 exports.forgotpassword = async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
@@ -261,10 +275,8 @@ exports.resetpassword = async (req, res, next) => {
     res.cookie("token", authtoken, {
       maxAge: 3600000,
       httpOnly: true,
-      secure: true,        // must be true on Vercel (HTTPS)
-      sameSite: isProduction ? "None" : "Lax",
-      path: "/",                     // MUST match
-      domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined
+      sameSite: "None",
+      secure: true,
       // domain: "https://ecommerce-backend-ochre-two.vercel.app",
     });
     return res
@@ -273,6 +285,25 @@ exports.resetpassword = async (req, res, next) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getuserprofile = async (req, res, next) => {
+  try {
+    const { token } = req.cookies;
+    if (!token) {
+      return res
+        .status(200)
+        .json({ success: false, message: "Token not found, please login first" });
+    }
+    const decoded = jwt.verify(token, SEC_KEY);
+    const user = await User.findById(decoded._id);
+    res
+      .status(200)
+      .json({ success: true, message: "Here are the user details", user });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -311,10 +342,9 @@ exports.updatepassword = async (req, res, next) => {
     res.cookie("token", authtoken, {
       maxAge: 3600000,
       httpOnly: true,
-      secure: true,         // must be true on Vercel (HTTPS)
-      sameSite: isProduction ? "None" : "Lax",
-      path: "/",                     // MUST match
-      domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined
+      sameSite: "None",
+      secure: true,
+      // domain: "https://ecommerce-backend-ochre-two.vercel.app",
     });
     return res
       .status(200)
