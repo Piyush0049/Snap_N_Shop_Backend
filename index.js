@@ -26,55 +26,34 @@ cloudinary.config({
 
 const app = express();
 
+// ✅ Dynamic CORS
 const allowedOrigins = [
   "https://ecommerce-frontend-web-ten.vercel.app",
   "http://localhost:3000",
-  "http://localhost:5173", // If using Vite
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or Postman)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log('Origin not allowed:', origin);
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error("Not allowed by CORS"));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-requested-with"],
   credentials: true,
   optionsSuccessStatus: 200,
-  maxAge: 86400 // Cache preflight response for 24 hours
 };
 
-// Apply CORS middleware
 app.use(cors(corsOptions));
-
-// Handle preflight requests
 app.options("*", cors(corsOptions));
 
-// Trust proxy (important for Vercel)
-app.set('trust proxy', 1);
-
-// Body parsing middlewares - AFTER CORS
+// Middlewares
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
-
-// Custom middleware to ensure CORS headers are always set
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
-  next();
-});
 
 // Routes
 app.use("/api/v1/ord", orderRoutes);
@@ -86,15 +65,10 @@ app.get("/", (req, res) => {
   res.send("The server is working");
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
-});
-
 module.exports = app;
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`App listening on http://localhost:${PORT}`);
-});
+// Local dev only
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`App listening on http://localhost:${PORT}`);
+  });
