@@ -15,7 +15,7 @@ const cookieOptions = {
   secure: true, // Required on Vercel (HTTPS)
   sameSite: isProduction ? "None" : "Lax",
   path: "/",
-  domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined, // allow across subdomains
+  domain: isProduction ? ".ecommerce-backend-ochre-two.vercel.app" : undefined, // allow across subdomains
 };
 
 // ===================== SIGNUP =====================
@@ -264,8 +264,8 @@ exports.resetpassword = async (req, res, next) => {
       secure: true,        // must be true on Vercel (HTTPS)
       sameSite: isProduction ? "None" : "Lax",
       path: "/",                     // MUST match
-      domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined
-      // domain: "https://ecommerce-backend-ochre-two.vercel.app",
+      domain: isProduction ? ".ecommerce-backend-ochre-two.vercel.app" : undefined
+      // domain: "https://.ecommerce-backend-ochre-two.vercel.app",
     });
     return res
       .status(200)
@@ -314,7 +314,7 @@ exports.updatepassword = async (req, res, next) => {
       secure: true,         // must be true on Vercel (HTTPS)
       sameSite: isProduction ? "None" : "Lax",
       path: "/",                     // MUST match
-      domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined
+      domain: isProduction ? ".ecommerce-backend-ochre-two.vercel.app" : undefined
     });
     return res
       .status(200)
