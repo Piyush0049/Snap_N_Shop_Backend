@@ -8,6 +8,8 @@ const sendmail = require("../middleware/sendmail");
 const { OAuth2Client } = require("google-auth-library");
 
 
+const isProduction = process.env.NODE_ENV === "production";
+
 exports.createuser = async (req, res, next) => {
   try {
     var { username, email, password, avatar, work } = req.body;
@@ -30,10 +32,11 @@ exports.createuser = async (req, res, next) => {
     const authtoken = jwt.sign({ _id: newUser._id }, SEC_KEY);
     res.cookie("token", authtoken, {
       maxAge: 3600000, // Expiry time
-      httpOnly: true, // Ensure cookie is accessible only via HTTP(S)
-      sameSite: "None", // Allow cross-site access
-      path: "/",      
-      secure: true, // Ensure cookie is sent only over HTTPS
+      httpOnly: true,
+      secure: true,       // must be true on Vercel (HTTPS)
+      sameSite: isProduction ? "None" : "Lax",
+      path: "/",                     // MUST match
+      domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined
       // domain: "https://ecommerce-backend-ochre-two.vercel.app", // Set the domain attribute
     });
     return res.status(200).json({ success: true, user: newUser, authtoken });
@@ -63,11 +66,12 @@ exports.userlogin = async (req, res, next) => {
     }
     const authtoken = jwt.sign({ _id: user._id }, SEC_KEY);
     res.cookie("token", authtoken, {
-      maxAge: 3600000, // Expiry time
-      path: "/",      
-      httpOnly: true, // Ensure cookie is accessible only via HTTP(S)
-      sameSite: "None", // Allow cross-site access
-      secure: true, // Ensure cookie is sent only over HTTPS
+      maxAge: 3600000,
+      httpOnly: true,
+      secure: true, // Ensure cookie is sent only over HTTPS,          // must be true on Vercel (HTTPS)
+      sameSite: isProduction ? "None" : "Lax",
+      path: "/",                     // MUST match
+      domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined
       // domain: "https://ecommerce-backend-ochre-two.vercel.app", // Set the domain attribute
     });
     return res
@@ -121,16 +125,17 @@ exports.googlelogin = async (req, res, next) => {
         password: await bcrypt.hash(sub, 10), // random hash, never used directly
       });
     }
-    
+
     const tokenJWT = jwt.sign({ _id: user._id }, SEC_KEY);
 
     // 🔹 Set cookie like you do in userlogin
     res.cookie("token", tokenJWT, {
       maxAge: 3600000, // 1h
       httpOnly: true,
-      path: "/",      
-      sameSite: "None", // allow frontend cross-site cookie
-      secure: true,     // only HTTPS
+      secure: true,     // only HTTPS,          // must be true on Vercel (HTTPS)
+      sameSite: isProduction ? "None" : "Lax",
+      path: "/",                     // MUST match
+      domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined
       // domain: "your-frontend-domain.com" // set if frontend != backend
     });
 
@@ -159,9 +164,10 @@ exports.userlogout = async (req, res, next) => {
     res.cookie("token", "", {
       expires: new Date(0),
       httpOnly: true,
-      sameSite: "None",
       secure: true,
-      path: "/"
+      sameSite: isProduction ? "None" : "Lax",
+      path: "/",                     // MUST match
+      domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined
       // domain: "https://ecommerce-backend-ochre-two.vercel.app",
     });
 
@@ -196,10 +202,11 @@ exports.userdelete = async (req, res, next) => {
     await User.findByIdAndDelete(decoded._id);
     res.cookie("token", "", {
       expires: new Date(0),
-      path: "/",      
       httpOnly: true,
-      sameSite: "None",
-      secure: true,
+      secure: true,  // must be true on Vercel (HTTPS)
+      sameSite: isProduction ? "None" : "Lax",
+      path: "/",                     // MUST match
+      domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined
     });
     return res
       .status(200)
@@ -282,10 +289,11 @@ exports.resetpassword = async (req, res, next) => {
     const { password } = user;
     res.cookie("token", authtoken, {
       maxAge: 3600000,
-      path: "/",      
       httpOnly: true,
-      sameSite: "None",
-      secure: true,
+      secure: true,        // must be true on Vercel (HTTPS)
+      sameSite: isProduction ? "None" : "Lax",
+      path: "/",                     // MUST match
+      domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined
       // domain: "https://ecommerce-backend-ochre-two.vercel.app",
     });
     return res
@@ -351,9 +359,10 @@ exports.updatepassword = async (req, res, next) => {
     res.cookie("token", authtoken, {
       maxAge: 3600000,
       httpOnly: true,
-      path: "/",      
-      sameSite: "None",
-      secure: true,
+      secure: true,         // must be true on Vercel (HTTPS)
+      sameSite: isProduction ? "None" : "Lax",
+      path: "/",                     // MUST match
+      domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined
       // domain: "https://ecommerce-backend-ochre-two.vercel.app",
     });
     return res
