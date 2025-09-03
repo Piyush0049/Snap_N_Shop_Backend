@@ -43,22 +43,22 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  // methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  // allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   credentials: true,
-  optionsSuccessStatus: 200,
+  // optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
 
 // ✅ Explicit preflight handler
-app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", req.headers.origin);
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-  res.header("Access-Control-Allow-Credentials", "true");
-  return res.sendStatus(200);
-});
+// app.options("*", (req, res) => {
+//   res.header("Access-Control-Allow-Origin", req.headers.origin);
+//   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+//   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+//   res.header("Access-Control-Allow-Credentials", "true");
+//   return res.sendStatus(200);
+// });
 
 // ✅ Trust proxy (important on Vercel for cookies + OAuth)
 app.set("trust proxy", 1);
