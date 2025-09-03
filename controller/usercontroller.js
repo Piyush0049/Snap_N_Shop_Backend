@@ -135,6 +135,8 @@ exports.userlogout = async (req, res) => {
   try {
     res.clearCookie("token", {
       ...cookieOptions,
+      maxAge: 0,
+      expires: new Date(0),
     });
 
     return res.status(200).json({ success: true, message: "Logout successful" });
@@ -162,6 +164,8 @@ exports.userdelete = async (req, res) => {
 
     res.clearCookie("token", {
       ...cookieOptions,
+      maxAge: 0,
+      expires: new Date(0),
     });
 
     return res.status(200).json({ success: true, message: "User deleted successfully" });
