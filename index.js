@@ -29,15 +29,26 @@ cloudinary.config({
 const app = express();
 
 const corsOptions = {
-  origin: ["https://ecommerce-frontend-web-ten.vercel.app", "http://localhost:3000"],
+  origin: (origin, callback) => {
+    const allowed = [
+      "https://ecommerce-frontend-web-ten.vercel.app",
+      "http://localhost:3000"
+    ];
+    if (!origin || allowed.includes(origin)) {
+      callback(null, origin); // reflect back the exact allowed origin
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-requested-with"],
   credentials: true,
-  optionsSuccessStatus: 204,
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
+
 
 
 app.use(express.json());
