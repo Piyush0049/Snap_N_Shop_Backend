@@ -26,7 +26,6 @@ cloudinary.config({
 
 const app = express();
 
-// ✅ CORS Configuration - MUST be before other middlewares
 const allowedOrigins = [
   "https://ecommerce-frontend-web-ten.vercel.app",
   "http://localhost:3000",
