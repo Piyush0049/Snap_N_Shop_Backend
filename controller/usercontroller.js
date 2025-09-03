@@ -15,7 +15,7 @@ const cookieOptions = {
   secure: true, // Required on Vercel (HTTPS)
   sameSite: isProduction ? "None" : "Lax",
   path: "/",
-  domain: isProduction ? ".ecommerce-backend-ochre-two.vercel.app" : undefined, // allow across subdomains
+  domain: isProduction ? "ecommerce-backend-ochre-two.vercel.app" : undefined, // allow across subdomains
 };
 
 // ===================== SIGNUP =====================
