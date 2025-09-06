@@ -29,8 +29,7 @@ const app = express();
 // ✅ Allowed origins
 const allowedOrigins = [
   "https://ecommerce-frontend-web-ten.vercel.app",
-  "http://localhost:3000",
-  "http://localhost:5173", // if using Vite
+  "http://localhost:3000"
 ];
 
 // ✅ Dynamic CORS config

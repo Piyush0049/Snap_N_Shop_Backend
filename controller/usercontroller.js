@@ -7,7 +7,11 @@ const { OAuth2Client } = require("google-auth-library");
 
 const SEC_KEY = "This is ecommerce";
 const isProduction = process.env.NODE_ENV === "production";
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const client = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI // ✅ Include this here if needed
+);
 
 // ✅ Common cookie options
 const cookieOptions = {
@@ -85,50 +89,63 @@ exports.userlogin = async (req, res) => {
   }
 };
 
+
+
+
 // ===================== GOOGLE LOGIN =====================
 exports.googlelogin = async (req, res) => {
   try {
-    const token = req.body.token || req.body.googleUser;
+      const code = req.body.token; // This is sent from frontend
+      
+      if (!code) {
+        console.log("No code provided");
+          return res.status(400).json({ success: false, message: "No code provided" });
+      }
 
-    if (!token) {
-      return res.status(400).json({ success: false, message: "No token" });
-    }
-
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    const { email, name, sub } = payload;
-
-    let user = await User.findOne({ email });
-    if (!user) {
-      user = await User.create({
-        username: name,
-        email,
-        password: await bcrypt.hash(sub, 10), // random hash, never used
+      const { tokens } = await client.getToken({
+          code,
+          redirect_uri: process.env.GOOGLE_REDIRECT_URI // ✅ MUST include this
       });
-    }
 
-    const tokenJWT = jwt.sign({ _id: user._id }, SEC_KEY);
+      client.setCredentials(tokens);
 
-    res.cookie("token", tokenJWT, {
-      ...cookieOptions,
-      maxAge: 3600000,
-    });
+      const ticket = await client.verifyIdToken({
+          idToken: tokens.id_token,
+          audience: process.env.GOOGLE_CLIENT_ID,
+      });
 
-    res.status(200).json({
-      success: true,
-      message: "Google login successful",
-      token: tokenJWT,
-      user,
-    });
+      const payload = ticket.getPayload();
+      const { email, name, sub } = payload;
+
+      let user = await User.findOne({ email });
+      if (!user) {
+          user = await User.create({
+              username: name,
+              email,
+              password: await bcrypt.hash(sub, 10), // dummy password
+          });
+      }
+
+      const tokenJWT = jwt.sign({ _id: user._id }, SEC_KEY);
+
+      res.cookie("token", tokenJWT, {
+          ...cookieOptions,
+          maxAge: 3600000,
+      });
+
+      res.status(200).json({
+          success: true,
+          message: "Google login successful",
+          token: tokenJWT,
+          user,
+      });
+
   } catch (error) {
-    console.error("Google login error:", error);
-    res.status(500).json({ success: false, message: "Google login failed" });
+      console.error("Google login error:", error);
+      res.status(500).json({ success: false, message: "Google login failed" });
   }
 };
+
 
 // ===================== LOGOUT =====================
 exports.userlogout = async (req, res) => {
