@@ -154,8 +154,12 @@ exports.googlelogin = async (req, res) => {
 // ===================== LOGOUT =====================
 exports.userlogout = async (req, res) => {
   try {
-    res.clearCookie("token", {
-      ...cookieOptions,
+    await res.clearCookie("token", {
+      httpOnly: true,
+      secure: true, // Required on Vercel (HTTPS)
+      sameSite: isProduction ? "None" : "Lax",
+      path: "/",
+      domain: isProduction ? ".ecommerce-backend-ochre-two.vercel.app" : undefined,
       maxAge: 0,
       expires: new Date(0),
     });
