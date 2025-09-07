@@ -7,11 +7,7 @@ const { OAuth2Client } = require("google-auth-library");
 
 const SEC_KEY = "This is ecommerce";
 const isProduction = process.env.NODE_ENV === "production";
-const client = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI // ✅ Include this here if needed
-);
+
 
 // ✅ Common cookie options
 const cookieOptions = {
@@ -93,20 +89,21 @@ exports.userlogin = async (req, res) => {
 
 
 // ===================== GOOGLE LOGIN =====================
+const client = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET
+);
+
+
 exports.googlelogin = async (req, res) => {
   try {
-      const code = req.body.token; // This is sent from frontend
-      
+      const code = req.body.token; // This is the code from frontend popup
       if (!code) {
-        console.log("No code provided");
           return res.status(400).json({ success: false, message: "No code provided" });
       }
 
-      const { tokens } = await client.getToken({
-          code,
-          redirect_uri: process.env.GOOGLE_REDIRECT_URI // ✅ MUST include this
-      });
-
+      // Exchange the code for tokens WITHOUT redirect_uri
+      const { tokens } = await client.getToken({ code, redirect_uri: "postmessage"});
       client.setCredentials(tokens);
 
       const ticket = await client.verifyIdToken({
@@ -117,6 +114,7 @@ exports.googlelogin = async (req, res) => {
       const payload = ticket.getPayload();
       const { email, name, sub } = payload;
 
+      // Create or find user
       let user = await User.findOne({ email });
       if (!user) {
           user = await User.create({
@@ -126,11 +124,13 @@ exports.googlelogin = async (req, res) => {
           });
       }
 
+      // Sign JWT
       const tokenJWT = jwt.sign({ _id: user._id }, SEC_KEY);
 
       res.cookie("token", tokenJWT, {
-          ...cookieOptions,
+          httpOnly: true,
           maxAge: 3600000,
+          sameSite: "lax"
       });
 
       res.status(200).json({
@@ -142,7 +142,7 @@ exports.googlelogin = async (req, res) => {
 
   } catch (error) {
       console.error("Google login error:", error);
-      res.status(500).json({ success: false, message: "Google login failed" });
+      res.status(500).json({ success: false, message: "Google login failed", error: error.message });
   }
 };
 
