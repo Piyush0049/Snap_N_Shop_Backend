@@ -97,52 +97,56 @@ const client = new OAuth2Client(
 
 exports.googlelogin = async (req, res) => {
   try {
-      const code = req.body.token; // This is the code from frontend popup
-      if (!code) {
-          return res.status(400).json({ success: false, message: "No code provided" });
-      }
+    const code = req.body.token; // Code from frontend popup
+    if (!code) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No code provided" });
+    }
 
-      // Exchange the code for tokens WITHOUT redirect_uri
-      const { tokens } = await client.getToken({ code, redirect_uri: "postmessage"});
-      client.setCredentials(tokens);
+    // Exchange the code for tokens WITHOUT redirect_uri
+    const { tokens } = await client.getToken({ code, redirect_uri: "postmessage" });
+    client.setCredentials(tokens);
 
-      const ticket = await client.verifyIdToken({
-          idToken: tokens.id_token,
-          audience: process.env.GOOGLE_CLIENT_ID,
+    const ticket = await client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, sub } = payload;
+
+    // Create or find user
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = await User.create({
+        username: name,
+        email,
+        password: await bcrypt.hash(sub, 10), // dummy password
       });
+    }
 
-      const payload = ticket.getPayload();
-      const { email, name, sub } = payload;
+    // Sign JWT
+    const tokenJWT = jwt.sign({ _id: user._id }, SEC_KEY);
 
-      // Create or find user
-      let user = await User.findOne({ email });
-      if (!user) {
-          user = await User.create({
-              username: name,
-              email,
-              password: await bcrypt.hash(sub, 10), // dummy password
-          });
-      }
+    // ✅ Use predefined cookie options
+    res.cookie("token", tokenJWT, {
+      ...cookieOptions,
+      maxAge: 3600000,
+    });
 
-      // Sign JWT
-      const tokenJWT = jwt.sign({ _id: user._id }, SEC_KEY);
-
-      res.cookie("token", tokenJWT, {
-          httpOnly: true,
-          maxAge: 3600000,
-          sameSite: "lax"
-      });
-
-      res.status(200).json({
-          success: true,
-          message: "Google login successful",
-          token: tokenJWT,
-          user,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Google login successful",
+      token: tokenJWT,
+      user,
+    });
 
   } catch (error) {
-      console.error("Google login error:", error);
-      res.status(500).json({ success: false, message: "Google login failed", error: error.message });
+    console.error("Google login error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Google login failed", error: error.message });
   }
 };
 
